@@ -7,3 +7,4 @@ Single-file C libraries (and a few commands) I have written.
 | fatlabel.h | Get and search for FAT filesystem labels. |
 | value_waiter.h | Simple wrapper around pthread condition variables. |
 | vector.h | Type-safe vector implementation (and some helper functions) using macros. |
+| gpio.h | Simple wrapper around the sysfs gpio interface (and a bit more) |
