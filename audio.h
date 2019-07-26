@@ -157,12 +157,13 @@ int audio_play_alsa(int card, int device, const audio_format_t format, const cha
 #ifdef AUDIO_SUPPORT_VORBIS
 fmt__impl__open(vorbis) {
     stb_vorbis* v = stb_vorbis_open_filename(filename, NULL, NULL);
-    *channels_out = v->channels;
-    *rate_out = v->sample_rate;
+    stb_vorbis_info i = stb_vorbis_get_info(v);
+    *channels_out = i.channels;
+    *rate_out = i.sample_rate;
     return (void*)(v);
 }
 fmt__impl__close(vorbis) { stb_vorbis_close((stb_vorbis*)(obj)); }
-fmt__impl__read(vorbis)  { return stb_vorbis_get_samples_short_interleaved((stb_vorbis*)(obj), ((stb_vorbis*)(obj))->channels, buf, buf_sz/((stb_vorbis*)(obj))->channels); }
+fmt__impl__read(vorbis)  { return stb_vorbis_get_samples_short_interleaved((stb_vorbis*)(obj), stb_vorbis_get_info((stb_vorbis*)(obj)).channels, buf, buf_sz/stb_vorbis_get_info((stb_vorbis*)(obj)).channels); }
 fmt__impl(vorbis);
 #endif
 
