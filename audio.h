@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#ifndef AUDIO_NO_AUTODETECT
 #ifdef TINYALSA_PCM_H
 #define AUDIO_SUPPORT_ALSA
 #endif
@@ -23,6 +24,7 @@
 
 #ifdef dr_mp3_h
 #define AUDIO_SUPPORT_MP3
+#endif
 #endif
 
 // audio_format_t implements a format for audio_play.
