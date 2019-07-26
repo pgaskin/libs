@@ -1,5 +1,4 @@
 // value_waiter - v3 - public domain - by Patrick Gaskin
-
 #include <stdbool.h>
 #include <pthread.h>
 

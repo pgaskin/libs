@@ -62,7 +62,7 @@ int mkmbr(
         reterr(-EINVAL, "active partition must exist and be from 1-%lu", partitions_sz);
     if (!out)
         reterr(-EINVAL, "out must point to a FILE");
-    
+
     // Arrange partitions
     uint64_t partition_pad[4]        = {UINT64_MAX};
     uint32_t partition_lbas[4]       = {UINT32_MAX};
@@ -78,7 +78,7 @@ int mkmbr(
         partition_lba_counts[i] = (sb.st_size / SECTOR_SIZE) + (partition_pad[i] != 0 ? 1 : 0);
         cur_sector += partition_lba_counts[i];
     }
-    
+
     // Write MBR
     #define ffn_(fn, exp, s, x) if ((fn) != (exp)) reterr(ferror(s), "error writing %s: %s", x, strerror(ferror(s)));
     #define fwrite_(ptr, size, n, s, x) ffn_(fwrite(ptr, size, n, s), size*n, s, x)
@@ -87,7 +87,7 @@ int mkmbr(
 
     if (verbose)
         printf("mbr (bootstrap_len=%lu) (partitions=%lu) (sectors=%d)\n", bootstrap_sz, partitions_sz, cur_sector);
-    
+
     if (bootstrap_sz > 0)
         fwrite_(bootstrap, sizeof(*bootstrap), bootstrap_sz, out, "bootstrap");
     for (size_t pad = 446-bootstrap_sz; pad > 0; pad--)
@@ -104,7 +104,7 @@ int mkmbr(
         assert(partition_pad[i] != UINT64_MAX);
         assert(partition_lbas[i] != UINT32_MAX);
         assert(partition_lba_counts[i] != UINT32_MAX);
-        
+
         if (verbose)
             printf("partition %lu @ %u+%u (pad=%lu) (active=%s) (type=0x%02X): %s\n", i, partition_lbas[i], partition_lba_counts[i], partition_pad[i], (partition_active-1 == i) ? "yes" : "no", partition_types[i], partition_files[i]);
 

@@ -6,6 +6,8 @@
  * for asprintf. fatlabel_search only works on Linux.
  */
 
+#ifndef FATLABEL_H
+#define FATLABEL_H
 #define _GNU_SOURCE // asprintf
 #include <stdint.h>
 
@@ -87,9 +89,9 @@ int fatlabel_get(const int fd, char **boot_label, char **volume_label, char **er
  * label (not case-sensitive). The returned path must be freed.
  */
 char* fatlabel_search(const char *label);
+#endif
 
 #ifdef FATLABEL_IMPLEMENTATION
-
 #include <stddef.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -251,5 +253,4 @@ char* fatlabel_search(const char *label) {
     fclose(f);
     return NULL;
 }
-
 #endif
