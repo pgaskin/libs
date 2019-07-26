@@ -1,4 +1,4 @@
-// gpio - v1 - simple wrapper around the sysfs gpio interface - pubic domain - by Patrick Gaskin
+// gpio - v2 - simple wrapper around the sysfs gpio interface - public domain - by Patrick Gaskin
 
 #define HIGH 1
 #define LOW  0
@@ -37,6 +37,8 @@ int gpio_wait_debounced_until(int pin, int pressed_val, int tick_millis);
 #include <poll.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdarg.h>
+#include <string.h>
 
 // Note: these macros depend on GCC compiler extensions.
 #define GPIO_PATH_R(F)  ({char p[255]; snprintf(p, 255, "/sys/class/gpio/%s", F); p;})
@@ -59,6 +61,36 @@ int gpio_wait_debounced_until(int pin, int pressed_val, int tick_millis);
     if (!tmp) close(fd); \
     tmp; \
 })
+
+// sysfs_class_write writes to /sys/class/{p1}/{p2}{p3}/{p4} (p4 can be null to
+// leave it out). It doesn't cover every possible path for /sys/class, but it
+// covers most of them. If the return value is negative, errno will be set.
+static inline int sysfs_class_write(const char* p1, const char* p2, int p3, const char* p4, const char* format, ...) {
+    int ret, fd;
+
+    char p[4096];
+    if ((ret = p4
+        ? snprintf(p, 4096, "/sys/class/%s/%s%d/%s", p1, p2, p3, p4)
+        : snprintf(p, 4096, "/sys/class/%s/%s%d", p1, p2, p3)) < 0)
+        return -1;
+    if ((fd = open(p, O_WRONLY)) < 0)
+        return -1;
+
+    va_list ap;
+    va_start(ap, format);
+    if ((ret = vdprintf(fd, format, ap)) < 0) {
+        int saved_errno = errno;
+        close(fd);
+        errno = saved_errno;
+        va_end(ap);
+        return -1;
+    }
+    va_end(ap);
+    if ((ret = close(fd)))
+        return -1;
+
+    return 0;
+}
 
 int gpio_export(int pin) {
     return DO_WRITE(GPIO_PATH_R("export"), "%d", pin);
