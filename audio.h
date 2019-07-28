@@ -110,7 +110,7 @@ const audio_format_t audio_format_mp3;
 #include <string.h>
 
 const audio_format_t* audio_format(const char* filename) {
-    char* dot = strchr(filename, '.');
+    char* dot = strrchr(filename, '.');
     #define audio_format_x(fmt, ext) if (dot && !strcasecmp(dot, ext)) return &fmt;
     #ifdef AUDIO_SUPPORT_VORBIS
     audio_format_x(audio_format_vorbis, ".ogg");
@@ -183,7 +183,7 @@ int audio_play(const audio_output_t output, void* output_cfg, const audio_format
 }
 
 #ifdef AUDIO_SUPPORT_ALSA
-__audio_output__play(alsa, &(audio_output_cfg_alsa_t){ .card = card, .device = device }, int card, int device);
+__audio_output__play(alsa, (&(audio_output_cfg_alsa_t){ .card = card, .device = device }), int card, int device);
 __audio_output__open(alsa) {
     audio_output_cfg_alsa_t *acfg = (audio_output_cfg_alsa_t*)(cfg);
     struct pcm *obj = pcm_open(acfg->card, acfg->device, PCM_OUT, &(struct pcm_config) {
