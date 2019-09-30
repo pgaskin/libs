@@ -231,7 +231,7 @@ __audio_format(vorbis);
 
 #ifdef AUDIO_SUPPORT_FLAC
 __audio_format__open(flac) {
-    drflac* f = drflac_open_file(filename);
+    drflac* f = drflac_open_file(filename, NULL);
     *channels_out = f->channels;
     *rate_out = f->sampleRate;
     return f;
