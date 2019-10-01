@@ -1,4 +1,4 @@
-// audio - v3 - simple audio playback library - public domain - by Patrick Gaskin
+// audio - v4 - simple audio playback library - public domain - by Patrick Gaskin
 #ifndef AUDIO_H
 #define AUDIO_H
 #include <stdint.h>
@@ -69,12 +69,12 @@ const audio_format_t* audio_format(const char* filename);
 // audio_play plays a specified audio file on a device. A nonzero number is
 // returned on error. If play_until is not NULL, the audio plays until it
 // (called with the argument play_until_data) returns true.
-int audio_play(const audio_output_t output, void* output_cfg, const audio_format_t format, const char* filename, bool (*play_until)(void*), void* play_until_data);
+int audio_play(const audio_output_t output, void* output_cfg, const audio_format_t format, const char* filename, bool (*play_until)(void*), void* play_until_data, float volume);
 
 #ifdef AUDIO_SUPPORT_ALSA
 // audio_play_alsa plays audio on an ALSA device. If using pulseaudio, you may
 // need to run your application with pasuspender.
-int audio_play_alsa(int card, int device, const audio_format_t format, const char* filename, bool (*play_until)(void*), void* play_until_data);
+int audio_play_alsa(int card, int device, const audio_format_t format, const char* filename, bool (*play_until)(void*), void* play_until_data, float volume);
 const audio_output_t audio_output_alsa;
 typedef struct audio_output_cfg_alsa_t {
     int card;
@@ -83,7 +83,7 @@ typedef struct audio_output_cfg_alsa_t {
 #endif
 
 #ifdef AUDIO_SUPPORT_PULSE
-int audio_play_pulse(const audio_format_t format, const char* filename, bool (*play_until)(void*), void* play_until_data);
+int audio_play_pulse(const audio_format_t format, const char* filename, bool (*play_until)(void*), void* play_until_data, float volume);
 const audio_output_t audio_output_pulse;
 #endif
 
@@ -131,7 +131,7 @@ const audio_format_t* audio_format(const char* filename) {
     return NULL;
 }
 
-int audio_play(const audio_output_t output, void* output_cfg, const audio_format_t format, const char* filename, bool (*play_until)(void*), void* play_until_data) {
+int audio_play(const audio_output_t output, void* output_cfg, const audio_format_t format, const char* filename, bool (*play_until)(void*), void* play_until_data, float volume) {
     int err, channels, rate, frame_count;
     int16_t buf[4096];
     void *fmt, *out;
@@ -145,6 +145,9 @@ int audio_play(const audio_output_t output, void* output_cfg, const audio_format
     }
 
     while ((frame_count = format.read_frames_s16le(fmt, buf, 4096, channels))) {
+        if (frame_count > 0 && volume > 0)
+            for (int sample = 0; sample < frame_count*channels; sample++)
+                buf[sample] *= volume;
         if ((err = output.write_frames_s16le(out, buf, (size_t)(frame_count*channels)*sizeof(buf[0]), frame_count)) < 0) {
             output.close(out);
             format.close(fmt);
@@ -160,8 +163,8 @@ int audio_play(const audio_output_t output, void* output_cfg, const audio_format
     return 0;
 }
 
-#define __audio_output__play0(name)           int audio_play_ ## name(const audio_format_t format, const char* filename, bool (*play_until)(void*), void* play_until_data) { return audio_play(audio_output_ ## name, NULL, format, filename, play_until, play_until_data); };
-#define __audio_output__play(name, conv, ...) int audio_play_ ## name(__VA_ARGS__, const audio_format_t format, const char* filename, bool (*play_until)(void*), void* play_until_data) { return audio_play(audio_output_ ## name, conv, format, filename, play_until, play_until_data); };
+#define __audio_output__play0(name)           int audio_play_ ## name(const audio_format_t format, const char* filename, bool (*play_until)(void*), void* play_until_data, float volume) { return audio_play(audio_output_ ## name, NULL, format, filename, play_until, play_until_data, volume); };
+#define __audio_output__play(name, conv, ...) int audio_play_ ## name(__VA_ARGS__, const audio_format_t format, const char* filename, bool (*play_until)(void*), void* play_until_data, float volume) { return audio_play(audio_output_ ## name, conv, format, filename, play_until, play_until_data, volume); };
 #define __audio_output__open(name)  static void* audio_open_ ## name(void* cfg, int channels, int rate)
 #define __audio_output__close(name) static void  audio_close_ ## name(void* obj)
 #define __audio_output__stop(name)  static void  audio_stop_ ## name(void* obj)
